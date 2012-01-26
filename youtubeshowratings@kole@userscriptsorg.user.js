@@ -3,7 +3,7 @@
 // @description Show video ratings on Youtube
 // @namespace   kole@userscripts.org
 // @homepageURL https://userscripts.org/scripts/show/113918
-// @version     1.2.2
+// @version     1.2.3
 // @updateURL   https://userscripts.org/scripts/source/113918.meta.js
 // @include     http://*youtube.com/*
 // ==/UserScript==
@@ -106,7 +106,7 @@ function callBackVideoLink(box) { // related videos
 					var num_dislikes = parseInt(rating.getAttribute("numDislikes"));
 
 					var i = boxesIds.indexOf(id);
-					attachBar(box, id, num_likes, num_dislikes, true);
+					attachBar(box, num_likes, num_dislikes);
 				}
 			}
 		});
@@ -168,46 +168,39 @@ function getBoxId(box)
 }
 
 
-// Attaches the rating bar to the bottom of the element, checking first if already has id attached (check = true)
-function attachBar(videoThumb, views, likes, dislikes, check) // views not used at the moment, but working
+// Attaches the rating bar to the bottom of the element
+function attachBar(videoThumb, likes, dislikes)
 {
 	var total = likes + dislikes;
 	var totalWidth = videoThumb.offsetWidth;
 	
 	if (totalWidth > 0)
 	{
-		var likesWidth = 0;
-		if (total > 0) likesWidth = Math.floor((likes / total) * totalWidth);
-		var dislikesWidth = 0;
-		if (total > 0) dislikesWidth = Math.ceil((dislikes / total) * totalWidth);
-		
-		// Keep white spacing between bars
-		if (likesWidth > 0 && dislikesWidth > 0)
-		{
-			if (likesWidth >= dislikesWidth)
-			{
-				likesWidth -= 1;
-			}
-			else
-			{
-				dislikesWidth -= 1;
-			}
-		}
-		
 		var ratingDiv = document.createElement("div");
 		ratingDiv.setAttribute("id", "ytrp_rating_bar");
 		ratingDiv.setAttribute("style", "position: absolute; top: 0; left: 0; right: 0; height: 5px; background-color: white;");
-		if (total > 0)
-		{
-			ratingDiv.setAttribute("title", (Math.round((likes / total) * 10000) / 100) + "% likes (" + ts(total) + " ratings)");
-		}
-		else
-		{
-			ratingDiv.setAttribute("title", "No ratings");
-		}
 
 		if (total > 0)
 		{
+			ratingDiv.setAttribute("title", (Math.round((likes / total) * 10000) / 100) + "% likes (" + ts(total) + " ratings)");
+			
+			var likesWidth = Math.floor((likes / total) * totalWidth);
+			var dislikesWidth = Math.ceil((dislikes / total) * totalWidth);
+			
+			// Keep white spacing between bars
+			if (likesWidth > 0 && dislikesWidth > 0)
+			{
+				if (likesWidth >= dislikesWidth)
+				{
+					likesWidth -= 1;
+				}
+				else
+				{
+					dislikesWidth -= 1;
+				}
+			}
+			
+		
 			var likesDiv = document.createElement("div");
 			likesDiv.setAttribute("style", "position: absolute; top: 0; left: 0; height: 4px; width: " + likesWidth + "px; background: #060;");
 			
@@ -220,10 +213,16 @@ function attachBar(videoThumb, views, likes, dislikes, check) // views not used 
 		}
 		else
 		{
+			ratingDiv.setAttribute("title", "No ratings");
 			var noRatingsDiv = document.createElement("div");
 			noRatingsDiv.setAttribute("style", "position: absolute; top: 0; left: 0; right: 0; height: 4px;  background: #BBB;");
 			
 			ratingDiv.appendChild(noRatingsDiv);
+		}
+		
+		while (videoThumb.getAttribute("class").indexOf("video-thumb") == -1)
+		{
+			videoThumb = videoThumb.parentNode;
 		}
 		
 		videoThumb.style.position = "relative";
