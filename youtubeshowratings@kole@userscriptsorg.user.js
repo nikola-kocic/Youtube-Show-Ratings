@@ -3,7 +3,7 @@
 // @description Show video ratings on Youtube
 // @namespace   kole@userscripts.org
 // @homepageURL https://userscripts.org/scripts/show/113918
-// @version     1.2.3
+// @version     1.2.4
 // @updateURL   https://userscripts.org/scripts/source/113918.meta.js
 // @include     http://*youtube.com/*
 // ==/UserScript==
@@ -171,6 +171,12 @@ function getBoxId(box)
 // Attaches the rating bar to the bottom of the element
 function attachBar(videoThumb, likes, dislikes)
 {
+	while (videoThumb.getAttribute("class").indexOf("video-thumb") == -1)
+	{
+		videoThumb = videoThumb.parentNode;
+	}
+	if (videoThumb == null) return;
+	
 	var total = likes + dislikes;
 	var totalWidth = videoThumb.offsetWidth;
 	
@@ -218,11 +224,6 @@ function attachBar(videoThumb, likes, dislikes)
 			noRatingsDiv.setAttribute("style", "position: absolute; top: 0; left: 0; right: 0; height: 4px;  background: #BBB;");
 			
 			ratingDiv.appendChild(noRatingsDiv);
-		}
-		
-		while (videoThumb.getAttribute("class").indexOf("video-thumb") == -1)
-		{
-			videoThumb = videoThumb.parentNode;
 		}
 		
 		videoThumb.style.position = "relative";
