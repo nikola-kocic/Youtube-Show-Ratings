@@ -50,12 +50,16 @@ function showRating(box)
 	boxes.push(box);
 		
 	// Get all related video ids for each video box
-	boxesIds.push(getBoxId(box));
-	var skip = checkIfAlreadyExists(box);
-	if (!skip)
-	{
-		// Send a request to fetch videos info from YouTube's API to the background page
-		callBackVideoLink(box);
+	var id = getBoxId(box);
+	// Empty id gives random result, we don't want that
+	if(id){
+		boxesIds.push(id);
+		var skip = checkIfAlreadyExists(box);
+		if (!skip)
+		{
+			// Send a request to fetch videos info from YouTube's API to the background page
+			callBackVideoLink(box);
+		}
 	}
 }
 
@@ -75,7 +79,7 @@ function checkIfAlreadyExists(video_div)
 	{
 		if (childDivs[i].getAttribute("id") == "ytrp_rating_bar")
 		{
-			return true;
+			return childDivs[i];
 		}
 	}
 	return false;
@@ -182,13 +186,14 @@ function attachBar(videoThumb, likes, dislikes)
 	
 	if (totalWidth > 0)
 	{
+		var title;
 		var ratingDiv = document.createElement("div");
 		ratingDiv.setAttribute("id", "ytrp_rating_bar");
-		ratingDiv.setAttribute("style", "position: absolute; top: 0; left: 0; right: 0; height: 5px; background-color: white;");
+		ratingDiv.setAttribute("style", "display: none; position: absolute; top: 0; left: 0; right: 0; height: 5px; background-color: white;");
 
 		if (total > 0)
 		{
-			ratingDiv.setAttribute("title", (Math.round((likes / total) * 10000) / 100) + "% likes (" + ts(total) + " ratings)");
+			title = (Math.round((likes / total) * 10000) / 100) + "% likes (" + ts(total) + " ratings)";
 			
 			var likesWidth = Math.floor((likes / total) * totalWidth);
 			var dislikesWidth = Math.ceil((dislikes / total) * totalWidth);
@@ -219,15 +224,38 @@ function attachBar(videoThumb, likes, dislikes)
 		}
 		else
 		{
-			ratingDiv.setAttribute("title", "No ratings");
+			title = "No ratings";
 			var noRatingsDiv = document.createElement("div");
 			noRatingsDiv.setAttribute("style", "position: absolute; top: 0; left: 0; right: 0; height: 4px;  background: #BBB;");
 			
 			ratingDiv.appendChild(noRatingsDiv);
 		}
 		
+		// It's easier to hover over the thumb. Title is not used there anyway
+		videoThumb.setAttribute("title", title);
 		videoThumb.style.position = "relative";
 		videoThumb.appendChild(ratingDiv);
+		videoThumb.addEventListener('mouseover', OnMouseEvent, false);
+		videoThumb.addEventListener('mouseout', OnMouseEvent, false);
+	}
+}
+
+function OnMouseEvent (event) {
+	if (event.type != "mouseover" && event.type != "mouseout") {
+		return;
+	}
+	
+	// somehow target and relatedTarget are sometimes not enough
+	// so we traverse up to a safe starting point for the lookup
+	var node = event.target;
+	while(node.tagName.toLowerCase() != "a"){
+		node = node.parentNode;
+	}
+	
+	// find the rating bar
+	var rb = checkIfAlreadyExists(node);
+	if(rb) {
+		rb.style.display = event.type == "mouseover" ? 'block' : 'none';
 	}
 }
 
